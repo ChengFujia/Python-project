@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+
+    <script type="text/javascript">
+    var curCount;
+    var count = 60;
+    var InterValObj;
+    var phone_number;
+    function sendMessage()
+    {
+        phone_number = document.getElementById("phone").value
+        if(phone_number)
+        {
+            curCount = count;
+            document.getElementById("getCode").setAttribute("disabled", "true");
+            document.getElementById("getCode").value = "waiting for "+curCount+"s";
+            InterValObj = window.setInterval(SetRemainTime, 1000);
+            loadXMLDoc();
+        }
+        else
+        {
+            alert('Please input phone number!')
+        }
+    }
+
+    function SetRemainTime()
+    {
+        if (curCount == 0)
+        {
+            window.clearInterval(InterValObj);
+            document.getElementById("getCode").removeAttribute("disabled");
+            document.getElementById("getCode").value = "Get New Code";
+        }else
+        {
+            curCount--;
+            document.getElementById("getCode").value = "waiting for "+curCount+"s";
+        }
+    }
+
+    function loadXMLDoc()
+    {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("GET", "login?mobile_phone_number=" + phone_number, true);
+        xmlhttp.send();
+    }
+    </script>
+
+    <style>
+        #phone{
+            position:relative;
+            top:10px;
+            left:50px;
+            width:210px;
+        }
+        #code{
+            position:relative;
+            top:30px;
+            left:50px;
+            width:100px;
+        }
+        #getCode{
+            position:relative;
+            top:30px;
+            left:50px;
+            width:100px;
+        }
+        #submit{
+            position:relative;
+            top:50px;
+            left:50px;
+            width:210px;
+        }
+        #getCode:hover,#submit:hover{
+            cursor:pointer;
+            background-color:#666;
+            color:#FFF;
+        }
+        input,button{
+            border:1px solid #999;
+            height:40px;
+            color:#666;
+        }
+        .h1{
+            position:relative;
+            top:10px;
+            left:130px;
+            color:#666;
+        }
+        .box{
+            top:20%;
+            left:33%;
+            height:300px;
+            width:300px;
+            border:dashed 2px #666;
+            position:absolute;
+        }
+        .warning{
+            position:absolute;
+            left:452px;
+            top:522px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="box">
+    <h1 class="h1">Lab</h1>
+    <form action="#" method="post">
+    <div>
+        <input type="text" id="phone" name="phone" placeholder="Phone Number">
+    </div>
+    <div>
+        <input type="text" id="code" name="code" placeholder="Verification Code">
+        <input type="button" id ="getCode" onclick="sendMessage()" value = "Get Code"/>
+    </div>
+    <div>
+        <button type="submit" id="submit">Submit</button>
+    </div>
+    </form>
+
+</div>
+{% if error_msg %}
+    <p style="color:red" class="warning" >{{ error_msg }}</p>
+{% else %}
+    <p class="warning"></p>
+{% endif %}
+</body>
+</html>
