@@ -5,14 +5,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 
-
 def main():
-    
     trainData = scio.loadmat('trainData.mat')
-
     unlabeled_data = trainData['trainData']
     unlabeled_data = unlabeled_data[:,:] / 255.
-
     
     # define the learning parameters
     alpha = 5 # learning rate
@@ -21,6 +17,8 @@ def main():
     imgSize = 784 # image size of a digit image in the minist dataset
 
     # the network structure
+    # first column -- outer nodes 
+    # second column -- inter nodes 
     layer_struc = [[imgSize, 1],
                    [0, 32],
                    [0, imgSize]]
@@ -49,14 +47,12 @@ def main():
     eachDigitNum = 50  # 50 instancese corresponding to each digit in the training set
 
     # display the original digit in the first row
-
     for iImg in range(nColumn):
+	# iImg - <0,9> 
         ax = plt.subplot(nRow, nColumn, iImg+1)
         plt.imshow(unlabeled_data[:,eachDigitNum * iImg + 1].reshape((28,28)).T, cmap= plt.cm.gray)
-       
         if iImg == 0:
             plt.ylabel('Original Images',rotation=90)
-
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
 
@@ -64,26 +60,28 @@ def main():
     count = 0 # count the iteration
     print('Autoencoder training start..')
     for iter in range(max_epoch):
-
         # define the shuffle index
         ind = list(range(dataset_size))
+        # shuffle set before every training
         random.shuffle(ind)
         
-        a = []
-        z = []
+        a = []	# inner net nerve value
+        z = []	# value handled
         z.append([])
+	# mini-batch learning
         for i in range(int(np.ceil(dataset_size / mini_batch))):
             a.append(np.zeros((layer_struc[0][1], mini_batch)))
             x = []
             for l in range(layer_num):
                 x.append( X[l][:,ind[i*mini_batch : min((i+1)*mini_batch, dataset_size)]])
 
+	    # define target output
             y = unlabeled_data[:,ind[i*mini_batch:min((i+1)*mini_batch,dataset_size)]]
+	    # feedforward every value
             for l in range(layer_num-1):
                 a.append([])
                 z.append([])
                 a[l+1],z[l+1] = feedforward(w[l],a[l],x[l])
-            
             
             delta[layer_num-1] = np.array(a[layer_num-1] - y) * np.array(a[layer_num-1])
             delta[layer_num-1] = delta[layer_num-1] * np.array(1-a[layer_num-1])
@@ -97,8 +95,6 @@ def main():
        
         count = count + 1  
          
-        
-       
         # display reconstruction result 
         if np.mod(iter+1,100) == 0 :
             b = []
@@ -119,7 +115,6 @@ def main():
     
     plt.show()
 
-
 # feedforward computing
 def feedforward(w,a,x):
     f = lambda s: 1 / (1 + np.exp(-s)) 
@@ -139,10 +134,8 @@ def backprop(w,z,delta_next):
 
     # the Derivative of sigmoid function
     df = lambda s: f(s) * (1 - f(s))
-    
-    
+   
     delta = df(z) * np.dot(w.T,delta_next)    
-
     return delta
 
 if __name__ == '__main__':
