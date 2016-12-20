@@ -1,3 +1,4 @@
+from __future__ import division
 import scipy.io as scio
 import numpy as np
 import matplotlib.pyplot as plt
@@ -33,7 +34,7 @@ unlabeled_data = np.zeros(unlabeledData.shape)
 for i in range(dataset_size):
 	# gray 
 	tmp = unlabeledData[:,i] / 255.
-	# using z-score -- HGIHLINE
+	# using z-score -- HGIHLIGHT
 	unlabeled_data[:,i] = (tmp-np.mean(tmp)) / np.std(tmp)
 
 # set autoencoder training paragrams
@@ -132,7 +133,7 @@ for iter in range(max_epoch):
             		ax.get_xaxis().set_visible(False)
             		ax.get_yaxis().set_visible(False)
 		print('Learning epoch:',count,'/',max_epoch)
-
+"""
 # compare original img with encoded img
 fig2 = plt.figure(2)
 code_result, tempZ = feedforward(w[0], b[0], X[0])
@@ -152,11 +153,165 @@ for iImg in range(nColumn):
     ax.get_yaxis().set_visible(False)
 
 plt.show()
+"""
 
+# define supervised learning paragrams
+supervised_alpha = 0.5
+max_epoch = 200
+mini_batch = 14
+SJ = []		#bias value 
+SAcc = []	#right or error rate
 
+# initinal supervised learning net structure
+SL_layer_struc = []
+SL_layer_num = 2
+SL_layer_struc = [[0,hidden_node],
+		[0,4]]
 
+# initinal supervised_weight
+supervised_weight = []
+for l in range(SL_layer_num-1):
+	supervised_weight.append(np.random.randn(SL_layer_struc[l+1][1],sum(SL_layer_struc[l])))
 
+# supervised learning delta
+delta = []
+for l in range(SL_layer_num):
+	delta.append([])
 
+# load training data
+trainData = DataSet['trainData']
+trainData = trainData[:,:]
+train_data = np.zeros(trainData.shape)
+
+# make to 0-1
+trainData_size = 56
+for i in range(trainData_size):
+	tmp = trainData[:,i]
+	# using z-zone 
+	train_data[:,i] = (tmp-np.mean(tmp)) / np.std(tmp)
+# compared with unsupervised training -- add those labels
+train_labels = DataSet['train_labels']
+train_labels = train_labels[:,:]
+
+# load test data
+testData = DataSet['testData']
+testData = testData[:,:]
+test_data = np.zeros(testData.shape)
+
+# make to 0-1
+testData_size = 40
+for i in range(testData_size):
+	tmp = testData[:,i]
+	test_data[:,i] = (tmp-np.mean(tmp))/np.std(tmp)
+
+test_labels = DataSet['test_labels']
+test_labels = test_labels[:,:]
+
+# using autoencoder get trainData_set&testData_set's code
+# trainSet 
+a = []
+a.append(np.zeros((layer_struc[0][1],trainData_size)))
+for l in range(hidden_layer-1):
+	if l==0:
+		tmpA,tmpZ = feedforward(w[l],a[l],train_data)
+		a.append(tmpA)
+	else:
+		tmpA,tmpZ = feedforward(w[l],a[l],np.zeros((0,trainData_size)))
+		a.append(tmpA)
+small_trainData = a[hidden_layer-1]
+
+# testSet
+a = []
+a.append(np.zeros((layer_struc[0][1],testData_size)))
+for l in range(hidden_layer-1):
+	if l==0:
+		tmpA,tmpZ = feedforward(w[l],a[l],test_data)
+		a.append(tmpA)
+	else:
+		tmpA,tmpZ = feedforward(w[l],a[l],np.zeros((0,testData_size)))
+		a.append(tmpA)
+small_testData = a[hidden_layer-1]
+
+# supervised learning
+def supervised_training():
+	global SJ
+	global SAcc
+	
+	print('Supervised training start...')
+	for iter in range(max_epoch):
+		# shuffle the data
+		ind = list(range(trainData_size))
+		random.shuffle(ind)
+
+		a = []
+		z = []
+		z.append([])
+		# batch one by one training -- confirm each one be trained
+		for i in range(int(np.ceil(trainData_size / mini_batch))):
+			# net inner node
+			a.append(small_trainData[:,ind[i*mini_batch:min((i+1)*mini_batch,trainData_size)]])
+			# prepare outer node
+			x = []
+			for l in range(SL_layer_num):
+				x.append(np.zeros((0,min((i+1)*mini_batch,trainData_size)-i*mini_batch)))
+			# target output
+			y = train_labels[:,ind[i*mini_batch:min((i+1)*mini_batch,trainData_size)]]
+
+			# feedforward computing
+			for l in range(SL_layer_num-1):
+				a.append([])
+				z.append([])
+				a[l+1],z[l+1] = feedforward(supervised_weight[l],a[l],x[l])
+			
+			# delta computing
+			delta[SL_layer_num-1] = np.array(a[SL_layer_num-1]-y)*np.array(a[SL_layer_num-1])
+			delta[SL_layer_num-1] = delta[SL_layer_num-1] * np.array(1-a[SL_layer_num-1])
+
+			# delta d-direction
+			for l in range(SL_layer_num-2,0,-1):
+				delta[l] = backprop(supervised_weight[l],z[l],delta[l+1])
+
+			for l in range(SL_layer_num-1):
+				dw = np.dot(delta[l+1],np.concatenate((a[l],x[l]),axis=0).T) / mini_batch
+				supervised_weight[l] = supervised_weight[l] - supervised_alpha * dw
+			
+			# make necessary computings
+			tmpResult = a[SL_layer_num-1]
+			SJ.append(np.sum(np.multiply(tmpResult[:]-y[:],tmpResult[:]-y[:]))/2/mini_batch)
+			SAcc.append(float(sum(np.argmax(y,axis=0)==np.argmax(tmpResult,axis=0))/mini_batch))
+	
+	# show changes during training process
+	print('Supervised learning done!')
+	plt.figure()
+	plt.plot(SJ)
+	plt.title('loss function')
+	plt.figure()
+	plt.plot(SAcc)
+	plt.title('Accuracy')
+
+def supervised_testing():
+	print('Testing...')
+	
+	# train_set accuracy
+	tmpA,tmpZ = feedforward(supervised_weight[0],small_trainData,np.zeros((0,trainData_size)))
+	train_pred = np.argmax(tmpA,axis=0)
+	train_res = np.argmax(train_labels,axis=0)
+	train_acc = float(sum(train_pred==train_res)/trainData_size) * 100
+	print('Training accuracy:%.2f%c'%(train_acc,'%'))
+
+	# test_set accuracy
+	tmpA,tmpZ = feedforward(supervised_weight[0],small_testData,np.zeros((0,testData_size)))
+	test_pred = np.argmax(tmpA,axis=0)
+	test_res = np.argmax(test_labels,axis=0)
+	test_acc = float(sum(test_pred==test_res)/testData_size) * 100
+	print('Testing accuracy:%.2f%c'%(test_acc,'%'))
+
+supervised_training()
+supervised_testing()
+
+plt.show()
+
+	
 
 
 
