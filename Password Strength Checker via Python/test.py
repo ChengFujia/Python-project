@@ -29,5 +29,13 @@ class TestCheck(unittest.TestCase):
         	self.assertTrue(repr(rv) == 'strong')
         	self.assertTrue('Perfect' in rv.message)
 
+	def test_email(self):
+		rv = check.Email('adc11@qq.com')
+		self.assertTrue(rv.isValiEmail() == True)
+
+	def test_emailType(self):
+		rv = check.Email("adc@qq.com")
+		self.assertTrue(rv.getEmailType() == 'qq')
+
 if __name__ == "__main__":
 	unittest.main()

@@ -60,7 +60,7 @@ class Password:
 			if ord(input[i]) - ord(input[i-1]) != delta:
 				return False
 		return True
-	
+
 	# magic method -- make class to function. aha..
 	def __call__(self,input,min_length=6,min_types=3,level=STRONG):
 		if len(input) < min_length:
@@ -86,5 +86,23 @@ class Password:
 			return Strength(level < self.MEDIUM,"medium","Password Not Strong Enough.")
 
 		return Strength(True,'strong','Password Perfect.')
+
+class Email:
+	def __init__(self,email):
+		self.email = email
+	def isValiEmail(self):
+		#pattern = re.compile(r'adc@qq.com')
+		pattern = re.compile(r'[a-zA-Z0-9]+@[a-zA-Z0-9]+\.com')
+		if pattern.search(self.email):
+			return True
+		else:
+			return False
+	def getEmailType(self):
+		if self.isValiEmail():
+			loc = self.email.find(r'@')
+			leng = len(self.email)
+			return self.email[loc+1:leng-4]
+		else:
+			return "Your email is wrong."
 
 password = Password()
