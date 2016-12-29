@@ -87,7 +87,19 @@ class Password:
 
 		return Strength(True,'strong','Password Perfect.')
 
+class email_:
+	def __init__(self,address,ttype,valid):
+		self.address = address
+		self.type = ttype
+		self.valid = valid
+	def __repr__(self):
+		if self.valid:
+			return "True"
+		else:
+			return "False"
+
 class Email:
+	'''
 	def __init__(self,email):
 		self.email = email
 	def isValiEmail(self):
@@ -104,5 +116,25 @@ class Email:
 			return self.email[loc+1:leng-4]
 		else:
 			return "Your email is wrong."
-
+	'''
+	@staticmethod
+	def isValiEmail(input):
+		pattern = re.compile(r'[a-zA-Z0-9]+@[a-zA-Z0-9]+.com')
+		return pattern.search(input)
+	@staticmethod	
+	def getEmailType(input):
+		loc = input.find(r'@')
+		leng = len(input)
+		return input[loc+1:leng-4]
+	
+	def __call__(self,input):
+		if self.isValiEmail(input):
+			type = self.getEmailType(input)	
+			if type != 'qq':
+				return False
+			e = email_(input,type,True)
+			return e
+		else:
+			return False
+email = Email()
 password = Password()

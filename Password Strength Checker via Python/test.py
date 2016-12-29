@@ -31,10 +31,10 @@ class TestCheck(unittest.TestCase):
 
 	def test_email(self):
 		rv = check.Email('adc11@qq.com')
-		self.assertTrue(rv.isValiEmail() == True)
+		self.assertTrue(rv.isValiEmail(),True)
 
 	def test_emailType(self):
-		rv = check.Email("adc@qq.com")
+		rv = check.Email("adc@123.com")
 		self.assertTrue(rv.getEmailType() == 'qq')
 
 if __name__ == "__main__":
