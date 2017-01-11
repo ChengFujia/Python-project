@@ -1,10 +1,11 @@
 var ocrDemo = {
 	CANVAS_WIDTH: 200,
 	TRANSLATED_WIDTH: 20,
-	PIXEL_WIDTH: 10, //TRANSLATED_WIDTH = CANVAS_WIDTH / PIXEL_WIDTH
+	PIXEL_WIDTH: 10, 
+	//TRANSLATED_WIDTH = CANVAS_WIDTH / PIXEL_WIDTH
 	BATCH_SIZE: 1,
 
-	// Server port
+	// Server port paragraphs
 	PORT: "9000",
 	HOST: "http://localhost",
 
@@ -21,8 +22,8 @@ var ocrDemo = {
    	},
 
     	resetCanvas: function() {
-        	var canvas = document.getElementById('canvas');
-        	var ctx = canvas.getContext('2d');
+        	var canvas = document.getElementById('canvas');	//canvas
+        	var ctx = canvas.getContext('2d');		//content on canvas
 
         	this.data = [];
         	ctx.fillStyle = this.BLACK;
@@ -39,23 +40,22 @@ var ocrDemo = {
 
 	// Add grid to canvas to see clear
 	drawGrid: function(ctx){
-		for(var x=this.PIXEL_WIDTH,y=this.PIXEL_WIDTH;
-			x<this.CANVAS_WIDTH;
-			x+=this.PIXEL_WIDTH,y+=this.PIXEL_WIDTH;){
+		for(var x=this.PIXEL_WIDTH,y=this.PIXEL_WIDTH;x<this.CANVAS_WIDTH;x+=this.PIXEL_WIDTH,y+=this.PIXEL_WIDTH;){
 			ctx.strokeStyle = this.BLUE;
-			ctx.beginPath();
+			ctx.beginPath();	// Prepare
 			ctx.moveTo(x,0);
 			ctx.lineTo(x,this.CANVAS_WIDTH);
-			ctx.stroke();
+			ctx.stroke();		// Draw
 
-			ctx.beginPath();
+			ctx.beginPath();	// Prepare
 			ctx.moveTo(0,y);
 			ctx.lineTo(this.CANVAS_WIDTH,y);
-			ctx.stroke();
+			ctx.stroke();		// Draw
 		}
 	},
 
 	// Handwrite input and store
+	// Guess?? e equals self in python??
 	onMouseMove: function(e,ctx,canvas){
 		if(!canvas.isDrawing){
 			return ;
@@ -77,6 +77,7 @@ var ocrDemo = {
 		var yPixel = Math.floor(y/this.PIXEL_WIDTH);
 		// Store input with array
 		this.data[((xPixel -1)*this.TRANSLATED_WIDTH+yPixel)-1]=1;
+
 		ctx.fillStyle = '#ffffff';	// White	
 		ctx.fillRect(xPixel*this.PIXEL_WIDTH,yPixel*this.PIXEL_WIDTH,this.PIXEL_WIDTH,this.PIXEL_WIDTH);
 	},
@@ -93,7 +94,7 @@ var ocrDemo = {
 		this.trainArray.push({"y0":this.data,"label":parseInt(digitVal)});
 		this.trainingRequestCount++;
 		
-		// whenever count==assign number ,send to server
+		// whenever "count==assign number" ,send to server
 		// In order to increase performance
 		if (this.trainingRequestCount == this.BATCH_SIZE){
 			alert("Sending training data to server...");
@@ -124,6 +125,7 @@ var ocrDemo = {
 
 	// Final one: react to ...
 	receiveResponse: function(xmlHttp){
+		// Only 200 is successful
 		if (xmlHttp.status!=200){
 			alert("Server returned status "+ xmlHttp.status);
 			return ;
@@ -150,3 +152,4 @@ var ocrDemo = {
     	}
 }
 	
+
