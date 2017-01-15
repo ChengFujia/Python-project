@@ -7,7 +7,7 @@ import random
 
 # server config
 HOST_NAME = "localhost"
-POST_NUMBER = 9000
+POST_NUMBER = 4000
 # this value is selected by script_test
 HIDDEN_NODE_COUNT = 15
 
@@ -23,16 +23,16 @@ data_labels = data_labels.tolist()
 train_indice = range(5000)
 random.shuffle(train_indice)
 
-nn = OCRNeuralNetwork(HIDDEN_NODE_COUNT,data_matrix,data_labels,data_indice);
+nn = OCRNeuralNetwork(HIDDEN_NODE_COUNT,data_matrix,data_labels,train_indice);
 
 class JSONHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 	# react to post(request)
-	def do_POST(self):
+	def do_GET(self):
 		response_code = 200
-		response = ""
-		var_len = int(self.headers.get('Content-Length'))
-		content = self.rfile.read(var_len)
-		payload = json.loads(content);
+        	response = ""
+        	var_len = int(self.headers.get('Content-Length'))
+        	content = self.rfile.read(var_len);
+        	payload = json.loads(content);
 
 		# if receive "train", train + save
 		if payload.get('train'):
@@ -59,7 +59,7 @@ class JSONHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
 	server_class = BaseHTTPServer.HTTPServer;
-	httpd = server_class((HOST_NAME,PORT_NUMBER),JSONHandler)
+	httpd = server_class((HOST_NAME,POST_NUMBER),JSONHandler)
 	
 	try:
 		httpd.serve_forever()
@@ -69,3 +69,4 @@ if __name__ == "__main__":
 		print "Unexcepted server exception occurred."
 	finally:
 		httpd.server_close()
+

@@ -6,7 +6,7 @@ var ocrDemo = {
 	BATCH_SIZE: 1,
 
 	// Server port paragraphs
-	PORT: "9000",
+	PORT: "4000",
 	HOST: "http://localhost",
 
 	// Color 
