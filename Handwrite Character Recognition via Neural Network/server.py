@@ -7,7 +7,7 @@ import random
 
 # server config
 HOST_NAME = "localhost"
-POST_NUMBER = 4000
+POST_NUMBER = 9000
 # this value is selected by script_test
 HIDDEN_NODE_COUNT = 15
 
@@ -27,7 +27,7 @@ nn = OCRNeuralNetwork(HIDDEN_NODE_COUNT,data_matrix,data_labels,train_indice);
 
 class JSONHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 	# react to post(request)
-	def do_GET(self):
+	def do_POST(self):
 		response_code = 200
         	response = ""
         	var_len = int(self.headers.get('Content-Length'))
@@ -54,7 +54,7 @@ class JSONHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 		self.send_header("Access-Control-Allow-Origin",'*')
 		self.end_headers()
 		if response:
-			self.wfile.write(json.dump(response))
+			self.wfile.write(json.dumps(response))
 		return 
 
 if __name__ == "__main__":
