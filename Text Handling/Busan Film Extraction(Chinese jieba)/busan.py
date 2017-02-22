@@ -3,6 +3,7 @@ import os,sys
 import jieba,codecs,math
 import jieba.posseg as pseg
 
+# 基于共现提取《釜山行》人物关系
 names = {}		#姓名辞典（姓名－出现次数）
 relationships = {}	#关系辞典（起点－｛终点－权值｝）
 lineNames = [] 		#每段内人物关系（lineNames[i]是一个列表）	

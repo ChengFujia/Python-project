@@ -4,6 +4,7 @@ import codecs
 import random
 import re
 
+# 利用马尔科夫链算法实现随机文本生成
 class Markov:
 	def __init__(self, filepath = None, mode = 0, coding="utf8"):
 		self.dictLen = 0		# 前缀字典长度
