@@ -5,6 +5,7 @@ import re
 import string
 import numpy as np
 
+# Twitter流数据情感分析
 from pyspark import SparkContext,SparkConf
 from pyspark import SQLContext
 from pyspark.mllib.classification import NaiveBayes
@@ -312,5 +313,3 @@ print ('Test Error = '+ str(testErr))
 #print ('Learned calssification tree model:')
 #print (model.toDebugString())
 res_visulization(predictions.collect())
-		 
-

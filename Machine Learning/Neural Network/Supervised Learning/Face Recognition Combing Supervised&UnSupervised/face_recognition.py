@@ -310,9 +310,3 @@ supervised_training()
 supervised_testing()
 
 plt.show()
-
-	
-
-
-
-

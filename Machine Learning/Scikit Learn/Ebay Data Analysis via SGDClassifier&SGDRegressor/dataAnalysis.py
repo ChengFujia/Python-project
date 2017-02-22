@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+# 利用scikit-learn中提供的诸多算法/模型实现ebay数据分析
 # prepare data
 test_set = pd.read_csv('raw/TestSet.csv')
 train_set = pd.read_csv('raw/TrainingSet.csv')

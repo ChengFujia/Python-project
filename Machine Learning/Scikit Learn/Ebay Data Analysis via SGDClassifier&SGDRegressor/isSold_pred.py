@@ -50,7 +50,6 @@ clf = SGDClassifier(penalty='l2',alpha=0.001)
 plot_learning(clf,'SGDClassifier')
 #plt.show()
 
-
 # Second Part : decrease 
 from sklearn import (manifold,decomposition,random_projection)
 from matplotlib import offsetbox
@@ -123,7 +122,6 @@ train_tsne = tsne.fit_transform(train[:show_instancees])
 plot_embedding(train_tsne,"T-SNE embedding of the auction (time:%.3fs)"%(time()-start_time))
 
 plt.show()
-
 
 # Third Part: test 
 from sklearn.metrics import (precision_score,recall_score,f1_score)

@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 
+# 神经网络实现手写字符识别系统
 import csv
 import numpy as np
 from numpy import matrix
@@ -47,7 +48,6 @@ class OCRNeuralNetwork:
 
     def _sigmoid_prime_scalar(self, z):
         return self.sigmoid(z) * (1 - self.sigmoid(z))
-
 
     def train(self, training_data_array):
         for data in training_data_array:

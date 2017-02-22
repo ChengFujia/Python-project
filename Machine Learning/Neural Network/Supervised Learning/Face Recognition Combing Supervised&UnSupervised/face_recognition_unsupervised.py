@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 
+# 利用自编码器实现特征提取和数据降维
 # feedforward computing
 def feedforward(w,a,x):
 	# sigmoid function

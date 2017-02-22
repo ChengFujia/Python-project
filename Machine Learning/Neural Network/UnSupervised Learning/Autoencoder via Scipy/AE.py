@@ -1,4 +1,5 @@
 #-*- coding=utf8 -*-
+# 基于无监督学习的自编码器实现
 
 import scipy.io as scio
 import numpy as np
@@ -6,6 +7,7 @@ import matplotlib.pyplot as plt
 import random
 
 def main():
+    # import scipy to handle .mat(matlab)
     trainData = scio.loadmat('trainData.mat')
     unlabeled_data = trainData['trainData']
     unlabeled_data = unlabeled_data[:,:] / 255.
@@ -68,16 +70,16 @@ def main():
         a = []	# inner net nerve value
         z = []	# value handled
         z.append([])
-	# mini-batch learning
+        # mini-batch learning
         for i in range(int(np.ceil(dataset_size / mini_batch))):
             a.append(np.zeros((layer_struc[0][1], mini_batch)))
             x = []
             for l in range(layer_num):
                 x.append( X[l][:,ind[i*mini_batch : min((i+1)*mini_batch, dataset_size)]])
 
-	    # define target output
+            # define target output
             y = unlabeled_data[:,ind[i*mini_batch:min((i+1)*mini_batch,dataset_size)]]
-	    # feedforward every value
+            # feedforward every value
             for l in range(layer_num-1):
                 a.append([])
                 z.append([])
