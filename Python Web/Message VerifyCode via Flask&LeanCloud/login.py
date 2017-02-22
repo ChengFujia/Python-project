@@ -1,6 +1,7 @@
 from flask import *
 from func import sms
 
+# 基于Python和LeanCloud的短信验证
 app = Flask(__name__)
 
 
