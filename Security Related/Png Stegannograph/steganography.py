@@ -1,6 +1,7 @@
 #-*- coding:utf-8
 from PIL import Image
 
+# 隐写术（传输信息 + 数字水印）
 """
 取得一个 PIL 图像并且更改所有值为偶数（使最低有效位为 0）
 """

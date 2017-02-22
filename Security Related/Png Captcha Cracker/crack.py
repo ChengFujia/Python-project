@@ -4,6 +4,8 @@ import hashlib
 import time
 import math
 
+# python 破解验证码（向量空间搜索引擎）
+
 class VectorCompare:
 	#计算矢量大小
 	def magnitude(self,concordance):
