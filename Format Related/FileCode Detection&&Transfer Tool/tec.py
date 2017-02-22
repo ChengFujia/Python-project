@@ -4,6 +4,8 @@ import os
 import argparse
 from chardet.universaldetector import UniversalDetector
 
+# 文件编码检测和转换工具
+
 #使用argparse模块解析命令行参数（初始化解析器＋添加属性）
 parser = argparse.ArgumentParser(description = '文本文件编码检测与转换')
 parser.add_argument('filePaths',nargs='+',help='检测或转换的文件路径')
