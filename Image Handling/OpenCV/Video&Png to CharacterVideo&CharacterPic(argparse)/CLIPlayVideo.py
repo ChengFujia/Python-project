@@ -7,7 +7,7 @@ import tty
 import cv2
 import pyprind
 
-
+# 视频 + 图片 转字符动画
 class CharFrame:
 
     ascii_char = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. "
