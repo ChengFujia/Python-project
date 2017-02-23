@@ -68,7 +68,7 @@ def recommend(user):
 	
 	# 得到推荐信息，返回等待使用，显示
 	dic = {}
-	sql = "selet name,brief from anime where id=%s;"%str(recommend)
+	sql = "select name,brief from anime where id=%s;"%str(recommend)
 	c.execute(sql)
 	results = c.fetchall()
 	dic['name'] = results[0][0]
