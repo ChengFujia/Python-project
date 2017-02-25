@@ -48,7 +48,8 @@ class Nude(object):
 		self.merge_regions = []
 		# 整合后的皮肤区域，元素的索引就是皮肤区域号，元素都是一些Skin对象的列表
 		self.skin_regions = []
-		# 最近合并的两个皮肤区域的区域号
+		# 记录最近合并的两个皮肤区域的区域号
+		# 如果之前已经合并了，这次便跳过
 		self.last_from,self.last_to = -1,-1
 		# 色情图像判断结果
 		self.result = None
@@ -86,6 +87,7 @@ class Nude(object):
 				self.total_pixels = self.width * self.height
 				ret += 1
 		"""
+		# 这部分由于空格和tab的问题一直报错...
 		if maxheight:
 			if self.height > maxheight:
             			hpercent = (maxheight / float(self.height))
@@ -106,8 +108,8 @@ class Nude(object):
 		# 获得图片所有像素数据
 		pixels = self.image.load()
 
-		for y in range(self.height):
-			for x in range(self.width):
+		for y in range(self.height):		# 高，行数
+			for x in range(self.width):		# 宽，列数
 				# 得到像素的RGB三个通道的值
 				# ［x,y］ = [(x,y)]
 				r = pixels[x,y][0]
@@ -148,7 +150,7 @@ class Nude(object):
 							self.skin_map[index].region != region and
 							self.last_from != region and
 							self.last_to != self.skin_map[index].region):
-							# 那么完成这两个像素点的合并工作
+							# 那么记录这两个像素点的待合并任务
 							self._add_merge(region,self.skin_map[index].region)
 						# 记录该相邻像素所在的区域号
 						region = self.skin_map[index].region
@@ -191,18 +193,18 @@ class Nude(object):
             		float(r * b) / ((r + g + b) ** 2) > 0.107 and \
             		float(r * g) / ((r + g + b) ** 2) > 0.112
 
-    		# HSV 颜色模式下的判定
+    	# HSV 颜色模式下的判定
 		h, s, v = self._to_hsv(r, g, b)
 		hsv_classifier = h > 0 and \
             		h < 35 and \
             		s > 0.23 and \
             		s < 0.68
 
-    		# YCbCr 颜色模式下的判定
+    	# YCbCr 颜色模式下的判定
 		y, cb, cr = self._to_ycbcr(r, g,  b)
 		ycbcr_classifier = 97.5 <= cb <= 142.5 and 134 <= cr <= 176
 
-    		# 效果经实践分析
+    	# 效果经实践分析
 		# return rgb_classifier or norm_rgb_classifier or hsv_classifier or ycbcr_classifier
 		return ycbcr_classifier
 
@@ -249,7 +251,7 @@ class Nude(object):
 
 		return [h, 1.0 - (3.0 * (_min / _sum)), (1.0 / 3.0) * _max]
 
-	# 对self.merge_regions操作，增加到列表中
+	# 对self.merge_regions操作，增加到列表中 -- 记录待合并
 	def _add_merge(self,_from,_to):
 		# 两个区域号赋值给类属性
 		self.last_from = _from
@@ -307,6 +309,7 @@ class Nude(object):
 			except IndexError:
 				new_detected_regions.append([])
 			for r_index in region:
+				# extend可以直接将多个元素导入过来
 				new_detected_regions[index].extend(detected_regions[r_index])
 				# 将合并后的清空
 				detected_regions[r_index] = []
@@ -386,8 +389,10 @@ class Nude(object):
 		# 遍历图像中所有的像素，将皮肤设成白色，其他为黑色
 		for pixel in self.skin_map:
 			if pixel.id not in skinIdSet:
+				# 不在皮肤集合里面的设为黑色
 				simageData[pixel.x,pixel.y] = 0,0,0
 			else:
+				# 在里面的（皮肤）设置为白色
 				simageData[pixel.x,pixel.y] = 255,255,255
 		# 源文件的绝对路径
 		filePath = os.path.abspath(self.image.filename)
@@ -408,6 +413,7 @@ if __name__ == "__main__":
 	parser.add_argument('-v','--visualization',action="store_true",help="Generating areas of skin image")
 	args = parser.parse_args()
 
+	# 支持多个图片参数
 	for fname in args.files:
 		if os.path.isfile(fname):
 			n = Nude(fname)
