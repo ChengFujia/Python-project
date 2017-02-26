@@ -6,10 +6,12 @@ Created on Sun 26 Feb 2017 10:02
 Help : <500 lines>
 实验一：线程池实现并发爬虫
 """
-import Queue 
+from queue import Queue 
 from threading import Thread, Lock
 import socket
 import time
+import urllib.parse
+import re
 
 """
 # socket抓取页面
@@ -67,13 +69,17 @@ q.task_done()	# 线程告知任务完成
 
 # 记录已经解析到的连接
 seen_urls = set(['/'])
+lock = Lock()
+
 # 定义 线程类
 class Fetcher(Thread):
 	def __init__(self,tasks):
 		Thread.__init__(self)
 		# 任务队列
 		self.tasks = tasks
+		# 后台进程（不会直接输出）
 		self.daemon = True
+		# 开启线程
 		self.start()
 
 	def run(self):
@@ -97,12 +103,11 @@ class Fetcher(Thread):
 			for link in links.difference(seen_urls):
 				self.tasks.put(link)
 			seen_urls.update(links)
+
 			lock.release()	# 解锁
-			# 通知任务队列这个线程的人物完成拉
+			# 通知任务队列这个线程的任务完成拉（只能在进程内部）
 			self.tasks.task_done()
 
-	import urllib.parse
-	import re
 	def parse_links(self,fetched_url,response):
 		if not response:
 			print('error: {}'.format(fetched_url))
@@ -110,7 +115,7 @@ class Fetcher(Thread):
 		if not self._is_html(response):
 			return set()
 
-		# 通过href属性找到所有链接
+		# 通过href属性 找到所有链接
 		urls = set(re.findall(r'''(?i)href=["']?([^\s"'<>]+)''',self.body(response)))
 		links = set()
 		for url in urls:
@@ -133,12 +138,13 @@ class Fetcher(Thread):
 		body = response.split(b'\r\n\r\n',1)[1]
 		return body.decode('utf-8')
 
-	# 
+	# 判断是否为html
 	def _is_html(self,response):
 		head,body = response.split(b'\r\n\r\n',1)
 		headers = dict(h.split(': ') for h in head.decode().split('\r\n')[1:])
-		return headers.get('Contend-Type','').startswith('text/html')
+		return headers.get('Content-Type','').startswith('text/html')
 
+# 自定义线程池
 class ThreadPool:
 	def __init__(self,num_threads):
 		self.tasks = Queue()
@@ -149,7 +155,8 @@ class ThreadPool:
 		self.tasks.put(url)
 
 	def wait_completion(self):
-		self.taks.join()
+		# 队列不为空，或者为空但是取得item的线程还未告知完成任务时，处于阻塞状态
+		self.tasks.join()
 
 if __name__ == "__main__":
 	start = time.time()
