@@ -34,7 +34,7 @@ import threading
 # 开启一个线程
 t = 你新建的线程
 t.start()	# 开启
-t.join()	# 你的当前函数就阻塞在这一步，直到线程运行完
+t.join()	# 你的当前函数就阻塞在这一步，直到线程运行完，才能继续向下执行
 # 通过函数创建线程
 def funca():
 	pass
@@ -44,6 +44,7 @@ class Fetcher(threading.Thread):
 	def __init__(self):
 		Thread.__init__(self)
 		# 加这句之后，主程序退出，子线程也会跟着退出
+		# 加这句之后，设置为后台进程，主程序退出之前不输出
 		self.daemon = True
 	def run(self):
 		# 线程运行的函数
@@ -158,6 +159,31 @@ class ThreadPool:
 		# 队列不为空，或者为空但是取得item的线程还未告知完成任务时，处于阻塞状态
 		self.tasks.join()
 
+"""
+# 使用标准池中的线程池
+from multiprocessing.pool import ThreadPool
+#...省略掉中间部分...
+#...去掉Fetcher初始化中的self.start()
+
+使用ThreadTool时，处理的对象可以不是线程对象，实际上Fetcher的线程部分ThreadTool根本用不到
+因为它自己内部已开了几个线程在等待任务输入。这里偷了个懒只删除了self.start()
+实际上可以把Fetcher的线程部分都去掉
+
+#...删除自己实现的ThreadTool...
+
+if __name__ == '__main__':
+	start = time.time()
+	pool = ThreadPool()
+	tasks = Queue()
+	tasks.put('/')
+	Workers = [Fetcher(tasks) for i in range(4)]
+	# 这里活用了map函数（使用map_async）是防止这一步阻塞，阻塞留给下一步
+	#　目的是把Fetcher和线程池中的线程分配好，线程自动调用run函数
+	pools.map_async(lambda w:w.run(),Workers)
+	tasks.join()
+	pool.close()
+	print('{} URLs fetched in {:.1f} seconds'.format(len(seen_urls),time.time()-start))
+"""
 if __name__ == "__main__":
 	start = time.time()
 	# 开四个进程
