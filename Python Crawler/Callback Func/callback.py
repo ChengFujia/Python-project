@@ -56,62 +56,79 @@ import re
 import urllib.parse
 import time
 
+# 创建两个set，一个是待处理的，另一个是已抓取的
 urls_todo = set(['/'])
 seen_urls = set(['/'])
-#
+# 该变量用于观察最高并发量(处理的url并发量)
 concurrency_achieved = 0
 selector = DefaultSelector()
+# 用于控制事件循环
 stopped = False
 
 class Fetcher:
+	# 三个成员变量：抓取的url，socket对象和服务器响应response
 	def __init__(self,url):	
 		self.response = b''
 		self.url = url
 		self.sock = None
 	
-	#
+	# 抓取函数(尝试连接，绑定函数，至于IO处理都是给事件循环处理的)
 	def fetch(self):
 		global concurrency_achieved
 		concurrency_achieved = max(concurrency_achieved, len(urls_todo))
-
+		# 非阻塞式IO
 		self.sock=socket.socket()
 		self.sock.setblocking(False)
 		try:
-			self.sock.connect(('xkcd.com',80))
-		except BlockIOError:
+			self.sock.connect(('localhost',3000))
+		except BlockingIOError:
 			pass
+		# 写事件 绑定 回调函数connected
 		selector.register(self.sock.fileno(),EVENT_WRITE,self.connected)
 
-	#
+	# 回调函数——1
 	def connected(self,key,mask):
-		print('connected!')
-		#
+		#print('connected!')
+		# 解除该socket上的所有绑定
 		selector.unregister(key.fd)
-		request = 'GET {} HTTP/1.0\r\nHost:xkcd.com\r\n\r\n'.format(self.url)
+		request = 'GET {} HTTP/1.0\r\nHost:localhost\r\n\r\n'.format(self.url)
 		self.sock.send(request.encode('ascii'))
-		#
+		# 读时间 绑定 回调函数read_response
 		selector.register(key.fd,EVENT_READ,self.read_response)
 
-	#
+	# 回调函数--2
 	def read_response(self,key,mask):
 		global stopped
-		chunk = self.sock.recv(4096) #
-		if chunk:
-			self.response += chunk
-		else:
-			selector.unregister(key.fd)
-			links = self.parse_links()
 
-			#
-			for link in links.difference(seen_urls):
-				urls_todo.add(link)
-				Fetcher(link).fetch()
+		# 下面的try..except..是解决Error[104],size过大服务器自动断开连接的
+		import errno
+		from socket import error as SocketError
+		try:
+			chunk = self.sock.recv(4096)	# 每次最多接受4k
+		
+			if chunk:
+				self.response += chunk
+			else:
+				# 完全响应之后，解除绑定
+				selector.unregister(key.fd)
+				links = self.parse_links()
+
+				# 解析结果，继续抓取
+				for link in links.difference(seen_urls):
+					urls_todo.add(link)		# 发现新的
+					Fetcher(link).fetch()	# 就立刻，抓取新的
 	
-			seen_urls.update(links)	
-			urls_to.remove(self.url)
-			if not urls_todo:
-				stopped = True	#
+				seen_urls.update(links)	
+				urls_todo.remove(self.url)
+				if not urls_todo:
+					stopped = True	# 当抓取队列为空时，结束循环
+				print(self.url)
+		except SocketError as e:
+			if e.errno != errno.ECONNRESET:
+				raise
+			pass
 
+	# url解析相关的函数，与上一节相同
 	def body(self):
 		body = self.response.split(b'\r\n\r\n', 1)[1]
 		return body.decode('utf-8')
@@ -131,37 +148,28 @@ class Fetcher:
 			if parts.scheme not in ('', 'http', 'https'):
 				continue
 			host, port = urllib.parse.splitport(parts.netloc)
-			if host and host.lower() not in ('xkcd.com', 'www.xkcd.com'):
+			if host and host.lower() not in ('localhost'):
 				continue
 			defragmented, frag = urllib.parse.urldefrag(parts.path)
 			links.add(defragmented)
 
-			return links
+		return links
 
 	def _is_html(self):
 		head, body = self.response.split(b'\r\n\r\n', 1)
 		headers = dict(h.split(': ') for h in head.decode().split('\r\n')[1:])
 		return headers.get('Content-Type', '').startswith('text/html')
 
-
+# 程序入口
 start = time.time()
+fetcher = Fetcher('/')
+fetcher.fetch()	# 实质上到这并没有执行什么，仅完成初始化和绑定工作，一旦事件发生才真正触发执行
 
-# Begin fetching http://xkcd.com/353
-fetcher = Fetcher('/353/')
-fetcher.fetch()
-
-# 
+# 事件循环改为stopped时停下来
 # def loop():
 while not stopped:
-	events = selector.select)
+	events = selector.select()
 	for event_key,event_mask in events:
 		callback = event_key.data		
-		callback()
-print('{} URLs fetched in {:.1f} seconds'.format(len(seen_urls), time.time() - start))
-
-
-
-
-
-
-
+		callback(event_key,event_mask)
+print('{} URLs fetched in {:.1f} seconds，achieved concurrency={}'.format(len(seen_urls), time.time() - start,concurrency_achieved))
