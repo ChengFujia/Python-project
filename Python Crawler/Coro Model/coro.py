@@ -78,6 +78,56 @@ fetcher = Fetcher('/')
 Task(fetcher.fetch())
 loop()
 
+## 2.使用yield from分解协程
+# 一旦连接成功，我们会发送GET请求到服务器等待响应，之前这些工作在不同回调函数中实现，现在可以放在同一个生成器函数中
+def fetch(self):
+	# ...省略之前的连接部分...
+	sock.send(request.encode('ascii'))
+	while True:
+		f = Future()
+		def on_readable():
+			f.set_result(sock.recv(4096))
+		selector.register(sock.fileno(),EVENT_READ,on_readable)
+		chunk = yield f
+		selector.unregister(sock.fileno())
+		if chunk:
+			self.response += chunk
+		else:
+			break
+
+# 虽然采用yield使代码集中于生成器函数，但随着回调函数增多，代码量增加
+# 因此考虑yield from分解代码(分解子协程，重构代码)
+# 实现read协程接受一个数据块
+def read(sock):
+	f = Future()
+	def on_readable():
+		f.set_result(sock.recv(4096))
+	selector.register(sock.fileno(),EVENT_READ,on_readable)
+	chunk = yield f
+	selector.unregister(sock.fileno())
+	return chunk
+
+# 实现read_all协程接受整个消息
+def read_all(sock):
+	response = []
+	chunk = yield from read(sock)
+	while chunk:
+		response.append(chunk)
+		chunk = yield from read(sock)
+	return b''.join(response)
+
+# 现在fetcher中调用read_all
+def fetch(self):
+	# ...省略之前的连接部分...
+	sock.send(request.encode('ascii'))
+	self.response = yield from read_all(sock)
+
+# 将yield和yield from有效统一起来	
+def __iter__(self):
+	yield self
+	return self.result
+
+
 
 
 
