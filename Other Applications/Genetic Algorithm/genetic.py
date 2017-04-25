@@ -1,3 +1,4 @@
+# 利用遗传算法解决一个函数最优化的Demo
 from numpy import random
 import numpy as np
 import matplotlib.pyplot as plt
@@ -6,12 +7,12 @@ import copy
 
 class Gas():
 	def __init__(self,popsize,chrosize,xrangemin,xrangemax):
-		self.popsize = popsize
-		self.chrosize = chrosize
-		self.xrangemin = xrangemin
+		self.popsize = popsize      # 每代的个体数
+		self.chrosize = chrosize    # 变量编码长度
+		self.xrangemin = xrangemin  # 变量取值范围
 		self.xrangemax = xrangemax
-		self.crossrate = 1
-		self.mutationrate = 0.01
+		self.crossrate = 1          # 交叉率
+		self.mutationrate = 0.01    # 变异率
 
 	# 初始化种群
 	def initialpop(self):
@@ -37,7 +38,7 @@ class Gas():
 		for val in fitvalue:
 			# 对每一个适应度除以总的适应度，然后累加
 			# 这样使得适应度大的个体获得更大的比例空间
-			new_value = (value*1.0/totalfit)
+			new_value = (val*1.0/totalfit)
 			accumulator += new_value
 			new_fitvalue.append(accumulator)
 		ms = []
@@ -58,7 +59,7 @@ class Gas():
 		pop = newpop
 		return pop
 
-	# 交叉
+	# 交叉--单点交叉
 	def crossover(self,pop):
 		for i in xrange(self.popsize-1):
 			# 近邻个体交叉，若随机数小于交叉率
@@ -76,11 +77,13 @@ class Gas():
 				pop[i+1] = temp2
 		return pop
 
-	# 变异
+	# 变异--基因/位反转
 	def mutation(self,pop):
 		for i in xrange(self.popsize):
+			# 反转变异，随机数小于变异率，进行变异
 			if (random.random() < self.mutationrate):
 				mpoint = random.randint(0,self.chrosize-1)
+				# 随机点上的基因进行反转
 				if (pop[i][mpoint] == 1):
 					pop[i][mpoint] = 0
 				else:
@@ -89,10 +92,11 @@ class Gas():
 
 	# 精英保护策略
 	def elitism(self,pop,popbest,nextbestfit,fitbest):
-		# 输入参数：上一代最优个体，变异之后的种群
-		# 上一代的最优适应度，本代最优适应度
+		# 输入参数：变异之后的种群，上一代最优个体
+		# 本代最优适应度，上一代的最优适应度
 		if nextbestfit-fitbest <0:
 			# 满足精英策略后，排到最差个体的索引，进行替换
+			# 上一代的最优个体 替换 本来的最差个体
 			pop_worst = nextfitvalue.index(min(nextfitvalue))
 			pop[pop_worst] = popbest
 		return pop
@@ -117,31 +121,33 @@ class Gas():
 		return r
 
 if __name__ == '__main__':
-	generation = 100
-	mainGas = Gas(100,10,-1,2)
-	pop = mainGas.initialpop()
-	pop_best = []
+	generation = 100			# 遗传代数 
+	mainGas = Gas(100,10,-1,2)	# 初始化Gas类：种群大小，编码长度，变量范围
+	pop = mainGas.initialpop()	# 种群初始化
+	pop_best = []				# 每一代的最优个体
 	for i in xrange(generation):
-		declist = mainGas.get_declist(pop)
-		fitvalue = mainGas.get_fitness(declist)
-		popbest = pop[fitvalue.index(max(fitvalue))]
+		# 在遗传代数中进行迭代
+		declist = mainGas.get_declist(pop)			# 解码 
+		fitvalue = mainGas.get_fitness(declist)		# 适应度函数
+		popbest = pop[fitvalue.index(max(fitvalue))]# 找到适应度最高的个体
 		popbest = copy.deepcopy(popbest)
 		fitbest = max(fitvalue)
-		pop_best.append(fitbest)
+		pop_best.append(fitbest)					# 存储每代的最高适应度 值
 
-		mainGas.selection(pop,fitvalue)
-		mainGas.crossover(pop)
-		mainGas.mutation(pop)
+		############################################# 进行算子操作，不断更新pop/种群
+		mainGas.selection(pop,fitvalue)				# 选择
+		mainGas.crossover(pop)						# 交叉
+		mainGas.mutation(pop)						# 变异
 
-		nextdeclist = mainGas.get_declist(pop)
-		nextfitvalue = mainGas.get_fitness(nextdeclist)
-		nextbestfit = max(nextfitvalue)
+		############################################# 进行精英保留之前的准备
+		nextdeclist = mainGas.get_declist(pop)			# 本代结果的 解码
+		nextfitvalue = mainGas.get_fitness(nextdeclist)	# 本代结果的 适应度函数
+		nextbestfit = max(nextfitvalue)					# 本代结果的 最大适应度
 
-		mainGas.elitism(pop,popbest,nextbestfit,fitbest)
+		mainGas.elitism(pop,popbest,nextbestfit,fitbest)# 比较上一代和这一代
 
 	t = [x for x in xrange(generation)]
 	s = pop_best
 	plt.plot(t,s)
 	plt.show()
 	plt.close()
-	
