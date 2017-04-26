@@ -33,6 +33,13 @@ class Gas():
 	# 输入：上一代的种群，上一代的种群适应度 列表
 	def selection(self,popsel,fitvalue):
 		new_fitvalue = []
+		'''
+		###### 选择--排序选择算法 ######
+		fit_rank = sorted(fitvalue)
+		for i in xrange(len(fitvalue)):
+			fitvalue[i] = fit_rank.index(fitvalue[i])+1
+		###### 选择--排序选择算法 ######
+		'''
 		totalfit = sum(fitvalue)
 		accumulator = 0.0
 		for val in fitvalue:
